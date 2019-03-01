@@ -1,0 +1,65 @@
+% function [R_result] = make_all_factor3(num,num2,index)
+
+%num为分为几组，num 输入整数
+%num2=1 市值加权   num=2 等权重
+%index 为需要排序用的指标
+
+[expect_R] = trend_factor_day;
+% [MOM_month,short_month,long_month] = MOM_factor;
+num=50;
+num2=2;
+index=expect_R;
+
+load('C:\Users\yixin\Desktop\CYXmatlab\Wind\交易数据\close_adj_nan2.mat')
+load('C:\Users\yixin\Desktop\CYXmatlab\Wind\交易数据\mkt_cap_ashare.mat')
+%%%%%%%%%%%%%%%%%%计算收益率矩阵%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+[R_day]=makereturn2(close_adj_nan2.data);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%分界线%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+R_result=zeros(num,size(close_adj_nan2.data,2));
+
+for i=1061:size(close_adj_nan2.data,2)-1
+      share_now=mkt_cap_ashare.data(:,i-1);             
+      index_now=index(:,i);                   %取出index来进行排序
+      R_day_now=R_day(:,i+1);
+      M=[share_now,index_now,R_day_now];
+      M(any(M(:,1)==0,2),:)=[];               %share_now等于0行，删了
+%       M(any(M(:,2)==0,2),:)=[];               %index等于0的行，删了
+      M(any(isnan(M),2),:)=[];                  %share_now,index_now,R_day_now 中 有NaN的行全删了
+%       [M,~] = sortrows(M,-1);
+%       M(fix(size(M,1)/10*8):size(M,1),:)=[];    %剔除 最小百分之20市值的公司
+      [M,~] = sortrows(M,-2);                 %对index_now进行降序排序     
+      
+      share1=M(:,1);
+      R1=M(:,end);
+      S=sum(share1);
+      S=repmat(S,size(share1,1),1);
+      share_result=share1./S;
+      R_result1=share_result.*R1;
+      switch num2
+          case 1
+            for ii=1:num
+                R_result(ii,i)=sum(R_result1(fix(length(R_result1)/num*(ii-1))+1:fix(length(R_result1)/num*ii),:))/sum(share_result(fix(length(R_result1)/num*(ii-1))+1:fix(length(R_result1)/num*ii),:));
+            end
+          case 2
+            for ii=1:num
+              R_result(ii,i)=sum(R1(fix(length(R1)/num*(ii-1))+1:fix(length(R1)/num*ii),:))/(fix(length(R1)/num*ii)-fix(length(R1)/num*(ii-1)));
+            end
+      end
+end
+
+factor=R_result(1,:)-R_result(end,:);   
+
+% factor_mean=mean(factor(1,1061:end));
+% factor_std=std(factor(1,1061:end));
+% factor_SR=factor_mean/factor_std;
+% factor_skewness=skewness(factor(1,1061:end));
+% factor_kurtosis=kurtosis(factor(1,1061:end));
+%%%%%%%%%%%%%%%%%%%%%%画图%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+figure();bar(mean(R_result(:,1061:end),2));
+title('trend');
+figure();plot(cumsum(factor));
+figure();plot(cumsum(R_result'));
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
