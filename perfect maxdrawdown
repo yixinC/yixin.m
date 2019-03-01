@@ -1,0 +1,49 @@
+function [output1,output2] = perfect_maxdrawdown(input,num)
+%计算 num 个最大回撤
+% input=index_wind_A.close;
+% num=10;
+
+[MaxDD,MaxDDIndex] = maxdrawdown(input);
+output1(1)=MaxDD;
+output2(:,1)=MaxDDIndex;
+for i=2:num
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%下面进行时间序列拆分%%%%%%%%%%%%%%%%%%%
+    for ii=1:size(output2,2)+1
+        if ii==1
+            kk=zeros(1,size(input,2));
+            kk(1,1:output2(1,ii)-1)=input(1,1:output2(1,ii)-1);
+            kk(kk==0)=NaN;
+            data{ii}=kk;
+        else if ii==size(output2,2)+1
+            kk=zeros(1,size(input,2));
+            kk(1,output2(2,ii-1)+1:end)=input(1,output2(2,ii-1)+1:end);
+            kk(kk==0)=NaN;
+            data{ii}=kk;
+        else
+            kk=zeros(1,size(input,2));
+            kk(1,output2(2,ii-1)+1:output2(1,ii)-1)=input(1,output2(2,ii-1)+1:output2(1,ii)-1);
+            kk(kk==0)=NaN;
+            data{ii}=kk;
+            end
+        end
+    end
+    %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%分界线%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    for ii=1:size(output2,2)+1
+        [Max{ii},MaxIndex{ii}] = maxdrawdown(data{ii});
+    end
+    maxdd=Max{1};
+    n=1;
+    for ii=2:size(output2,2)+1
+        if Max{ii}>maxdd
+            maxdd=Max{ii};
+            n=ii;
+        end
+    end
+    
+    output1(i)=Max{n};
+    
+    output2(:,i)=MaxIndex{n};
+    output2=output2';
+    [output2,~] = sortrows(output2,1);
+    output2=output2';
+end
