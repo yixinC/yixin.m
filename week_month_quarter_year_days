@@ -1,0 +1,54 @@
+function [unique_week,unique_month,unique_quarter,unique_year]=week_month_quarter_year_days
+load('C:\Users\yixin\Desktop\CYXmatlab\Wind\交易数据\close_adj_nan2.mat')
+time(:,1)=weeknum(close_adj_nan2.dates);
+time(:,2)=month(close_adj_nan2.dates);
+time(:,3)=quarter(close_adj_nan2.dates);
+time(:,4)=year(close_adj_nan2.dates);
+timeweek=[time(:,4),time(:,1)];
+unique_week=unique(timeweek,'row');
+% unique_week=sortrows(unique_week,2);
+for i=1:size(unique_week,1)
+    num=0;
+    for ii=1:size(timeweek,1)
+        a=isequal(unique_week(i,:),timeweek(ii,:));
+        num=num+a;
+    end
+    kk(i,1)=num;
+end
+unique_week=[unique_week,kk];
+
+time_month=[time(:,4),time(:,2)];
+unique_month=unique(time_month,'row');
+for i=1:size(unique_month,1)
+    num=0;
+    for ii=1:size(time_month,1)
+        a=isequal(unique_month(i,:),time_month(ii,:));
+        num=num+a;
+    end
+    ll(i,1)=num;
+end
+unique_month=[unique_month,ll];
+
+time_quarter=[time(:,4),time(:,3)];
+unique_quarter=unique(time_quarter,'row');
+for i=1:size(unique_quarter,1)
+    num=0;
+    for ii=1:size(time_quarter,1)
+        a=isequal(unique_quarter(i,:),time_quarter(ii,:));
+        num=num+a;
+    end
+    pp(i,1)=num;
+end
+unique_quarter=[unique_quarter,pp];
+
+time_year=time(:,4);
+unique_year=unique(time_year,'row');
+for i=1:size(unique_year,1)
+    num=0;
+    for ii=1:size(time_year,1)
+        a=isequal(unique_year(i,:),time_year(ii,:));
+        num=num+a;
+    end
+    oo(i,1)=num;
+end
+unique_year=[unique_year,oo];
