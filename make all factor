@@ -1,0 +1,52 @@
+function [R_result] = make_all_factor(num,num2,num3,num4,index)
+%每天排序一次
+%num为分为几组，num 输入整数
+%num2=1 市值加权   num=2 等权重
+%num3 num4 根据t-num3 t-num4时期的index来进行排序 ,比如取前一天的index，可令 num3=1,num4=1;
+%index 为需要排序用的指标
+
+load('C:\Users\yixin\Desktop\CYXmatlab\Wind\交易数据\close_adj_nan2.mat')
+load('C:\Users\yixin\Desktop\CYXmatlab\Wind\交易数据\mkt_cap_ashare.mat')
+
+%%%%%%%%%%%%%%%%%%计算收益率矩阵%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+[R_day,~,~,~]=makeReturn(close_adj_nan2.data);
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%分界线%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+R_result=zeros(num,size(close_adj_nan2.data,2));
+
+for t=num3+1:size(close_adj_nan2.data,2)
+
+      share_now=mkt_cap_ashare.data(:,t-1);          %取出 t 时刻的自由流通股市值      
+      index_now=index(:,t-num3:t-num4);        %取出t-num3 t-num4时期的index来进行排序
+      index_now=mean(index_now,2);
+      R_day_now=R_day(:,t);
+      M=[share_now,index_now,R_day_now];
+      M(any(M(:,1)==0,2),:)=[];               %share_now等于0行，删了
+      M(any(M(:,2)==0,2),:)=[];               %index等于0的行，删了
+      M(any(isnan(M),2),:)=[];                  %share_now,index_now,R_day_now 中 有NaN的行全删了
+      [M,~] = sortrows(M,-2);                 %对index_now进行降序排序      
+      share1=M(:,1);
+      R1=M(:,end);
+      
+      S=sum(share1);
+      S=repmat(S,size(share1,1),1);
+      share_result=share1./S;
+      R_result1=share_result.*R1;
+      switch num2
+          case 1
+            for ii=1:num
+                R_result(ii,t)=sum(R_result1(fix(length(R_result1)/num*(ii-1))+1:fix(length(R_result1)/num*ii),:))/sum(share_result(fix(length(R_result1)/num*(ii-1))+1:fix(length(R_result1)/num*ii),:));
+            end
+          case 2
+            for ii=1:num
+              R_result(ii,t)=sum(R1(fix(length(R1)/num*(ii-1))+1:fix(length(R1)/num*ii),:))/(fix(length(R1)/num*ii)-fix(length(R1)/num*(ii-1)));
+            end
+      end
+end
+% figure();bar(mean(R_result'));
+% title('mean');
+% figure();plot(cumprod(R_result'+1));
+% title('cumprod');
+% figure();plot(cumsum(R_result'));
+% title('cumsum');
