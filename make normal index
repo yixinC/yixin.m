@@ -1,0 +1,18 @@
+function [index_out] = make_norm_index(index1,num)
+%index1  为需要排序的因子
+%num1  等于1为因子升序，-1为降序
+
+[A] = make_index(index1,num);         %调用make_index 的到排序，后续在进行正太分布打分
+
+BB=zeros(size(A,1),size(A,2));
+for i=1:size(A,2)
+    AA=A(:,i);
+    AA(any(isnan(AA),2),:)=[];          %含有NaN 的行 删除
+    BB(:,i)=A(:,i)/size(AA,1);
+end
+
+BB(BB>normcdf(3))=normcdf(3);
+BB(BB<normcdf(-3))=normcdf(-3);        %去除尾部
+
+index_out=norminv(BB,0,1);
+index_out=-index_out;                  %取反，这样排第一的得分才最高
