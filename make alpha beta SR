@@ -1,0 +1,31 @@
+function [SR_hs300,alpha_beta_hs300,SR_CSI_500,alpha_beta_CSI_500] = make_alpha_beta_SR(R_index_hs300,R_index_CSI_500,R_result,m)
+%根据过去n天进行回归测试beta  alpha
+%%%%%%%%%%%%%%%%%%%%%测试 算beta和alpha 沪深300 %%%%%%%%%%%%%%%%%%%%%%%
+n=m+1;
+alpha_beta_hs300=zeros(2,size(R_result,2));
+for t=n:size(R_result,2)                       
+    y=R_result(1,t-n+1:t-1)';
+    X=[ones(size(y)) R_index_hs300(1,t-n+1:t-1)'];
+    [B,~] = regress(y,X);
+     alpha_beta_hs300(:,t)=B;
+     alpha_beta_hs300(1,t)=R_result(1,t)-B(2)*R_index_hs300(1,t);
+end
+alpha_beta_hs300(:,1:n-1)=[];
+SR_hs300=(mean(alpha_beta_hs300(1,:))/std(alpha_beta_hs300(1,:)))*sqrt(252);       %夏普率计算
+% (mean(alpha_beta(1,:),2)/std(alpha_beta(1,:)))*sqrt(252);
+%%%%%%%%%%%%%%%%%%%%%分界线%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+%%%%%%%%%%%%%%%%%%%%%测试 算beta和alpha 中证500 %%%%%%%%%%%%%%%%%%%%%%%
+alpha_beta_CSI_500=zeros(2,size(R_result,2));
+                                             %根据过去 n-1 天进行回归 确定beta 和 alpha
+for t=n:size(R_result,2)                       
+    y=R_result(1,t-n+1:t-1)';
+    X=[ones(size(y)) R_index_CSI_500(1,t-n+1:t-1)'];
+    [B,~] = regress(y,X);
+     alpha_beta_CSI_500(:,t)=B;
+     alpha_beta_CSI_500(1,t)=R_result(1,t)-B(2)*R_index_CSI_500(1,t);
+end
+alpha_beta_CSI_500(:,1:n-1)=[];
+SR_CSI_500=(mean(alpha_beta_CSI_500(1,:))/std(alpha_beta_CSI_500(1,:)))*sqrt(252);       %夏普率计算
+% (mean(alpha_beta(1,:),2)/std(alpha_beta(1,:)))*sqrt(252);
+%%%%%%%%%%%%%%%%%%%%%分界线%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
