@@ -1,0 +1,16 @@
+function [re_index] = make_nuetral(index1,index2)
+load('C:\Users\yixin\Desktop\CYXmatlab\Wind\交易数据\mkt_cap_CSRC.mat')
+load('industry_dummy_zjh.mat')
+% index1(index1<=0)=NaN;
+% index2(index2<=0)=NaN;
+re_index=zeros(size(index1,1),size(index1,2));
+for i=2:size(index1,2)
+    y=index1(:,i);
+    x=[ones(size(y)),index2(:,i-1)];
+%     x=[ones(size(y)),industry_dummy_zjh.dummy];                             %行业中性处理
+%     x=[ones(size(y)),mkt_cap_CSRC.data(:,i-1)];                              %市值中性处理
+%     x=[ones(size(y)),industry_dummy_zjh.dummy,mkt_cap_CSRC.data(:,i-1)];     %市值和行业  中性处理
+    [b,~,r,~,~] = regress(y,x);
+    re_index(:,i)=b(1,1)+r(:,1);
+end
+re_index(:,1)=NaN;
